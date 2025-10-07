@@ -1,0 +1,11 @@
+Instructions
+
+In Jenkins, go to:
+Manage Jenkins → Credentials → Global → Add Credentials
+Type: Username with password
+ID: dockerhub-credentials
+Username: your DockerHub username
+Password: your DockerHub access token or password
+Place this Jenkinsfile in your repository root.
+Ensure your repository has a Dockerfile at the root directory.
+Create a pipeline in Jenkins → point it to your repo → build it.
