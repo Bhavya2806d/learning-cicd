@@ -1,0 +1,57 @@
+This Jenkins pipeline automates:
+Code checkout (fetches your project files)
+Docker image build
+Docker Hub authentication
+Image push to Docker Hub
+Cleanup
+
+1) Pipeline block
+If you have Docker installed on a specific node, you can specify it:
+agent { label 'docker' }
+
+2)environment block
+Declares environment variables available in all stages.
+DOCKERHUB_CREDENTIALS: the Jenkins Credential ID that securely stores your DockerHub username/password or access token.
+DOCKERHUB_USER: your DockerHub account name (for tagging).
+IMAGE_NAME: name of the image you’ll push.
+
+Example resulting tag:
+your_dockerhub_username/your_image_name:latest
+
+3)stage checkout
+checkout scm tells Jenkins to fetch the source code from the same repository where this Jenkinsfile resides.
+This ensures Docker build uses the latest project files.
+echo just prints messages to Jenkins logs (useful for debugging).
+
+3)stage build docker image
+Uses a shell command to build a Docker image from your project’s Dockerfile.
+-t tags the image with your username, image name, and latest tag.
+The final image name looks like:
+bhavya123/myapp:latest
+The . tells Docker to use the current directory as the build context (where the Dockerfile is).
+
+4)login to dockerhub
+withCredentials fetches the username and password/token from Jenkins credentials safely.
+docker login authenticates to DockerHub using those credentials.
+echo $PASS | docker login -u $USER --password-stdin avoids printing sensitive data in logs (safer than inline passwords).
+
+5)stage push to dockerhub
+Pushes the built image to your DockerHub repository.
+Docker Hub will then show this image under your account.
+
+6)post block
+Runs after all stages, even if one fails.
+Removes the image locally to free disk space on the Jenkins agent.
+|| true prevents pipeline failure if the image doesn’t exist (harmless).
+
+Resulting Flow
+Jenkins pulls the latest code.
+Builds Docker image → docker build.
+Logs into DockerHub securely.
+Pushes the image → docker push.
+Cleans up local Docker images.
+
+You end up with:
+A working Docker image pushed to DockerHub.
+Example final image:
+docker.io/bhavya123/myapp:latest
