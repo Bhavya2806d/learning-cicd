@@ -1,0 +1,56 @@
+pipeline {
+    agent any
+
+    environment {
+        // Set your Docker Hub credentials ID from Jenkins Credentials Manager
+        DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'
+        // Change these values to your repo and image name
+        DOCKERHUB_USER = 'your_dockerhub_username'
+        IMAGE_NAME = 'your_image_name'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                echo 'Cloning repository...'
+                checkout scm
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    echo 'Building Docker image...'
+                    sh "docker build -t ${DOCKERHUB_USER}/${IMAGE_NAME}:latest ."
+                }
+            }
+        }
+
+        stage('Login to DockerHub') {
+            steps {
+                script {
+                    echo 'Logging in to DockerHub...'
+                    withCredentials([usernamePassword(credentialsId: "${DOCKERHUB_CREDENTIALS}", usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                        sh "echo $PASS | docker login -u $USER --password-stdin"
+                    }
+                }
+            }
+        }
+
+        stage('Push to DockerHub') {
+            steps {
+                script {
+                    echo 'Pushing Docker image to DockerHub...'
+                    sh "docker push ${DOCKERHUB_USER}/${IMAGE_NAME}:latest"
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Cleaning up Docker images...'
+            sh "docker rmi ${DOCKERHUB_USER}/${IMAGE_NAME}:latest || true"
+        }
+    }
+}
