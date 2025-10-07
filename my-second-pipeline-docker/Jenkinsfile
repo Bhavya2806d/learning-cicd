@@ -5,8 +5,8 @@ pipeline {
         // Set your Docker Hub credentials ID from Jenkins Credentials Manager
         DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'
         // Change these values to your repo and image name
-        DOCKERHUB_USER = 'your_dockerhub_username'
-        IMAGE_NAME = 'your_image_name'
+        DOCKERHUB_USER = 'tyagibhavya'
+        IMAGE_NAME = 'jenkins-push'
     }
 
     stages {
