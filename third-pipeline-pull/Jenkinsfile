@@ -1,0 +1,48 @@
+
+pipeline {
+    agent any
+
+    environment {
+        DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'
+        DOCKERHUB_USER = 'tyagibhavya'  // 🔹 Your DockerHub username
+        IMAGE_NAME = 'jenkins-push'     // 🔹 Your image name
+    }
+
+    stages {
+        stage('Login to DockerHub') {
+            steps {
+                echo "Logging into DockerHub..."
+                withCredentials([usernamePassword(credentialsId: "${DOCKERHUB_CREDENTIALS}", usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
+                }
+            }
+        }
+
+        stage('Pull Image from DockerHub') {
+            steps {
+                echo "Pulling image from DockerHub..."
+                sh 'docker pull ${DOCKERHUB_USER}/${IMAGE_NAME}:latest'
+            }
+        }
+
+        stage('Run Container') {
+            steps {
+                echo "Running container from pulled image..."
+                sh '''
+                    docker run -d --name test-container -p 8082:80 ${DOCKERHUB_USER}/${IMAGE_NAME}:latest || true
+                    docker ps
+                '''
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Cleaning up containers..."
+            sh '''
+                docker stop test-container || true
+                docker rm test-container || true
+            '''
+        }
+    }
+}
